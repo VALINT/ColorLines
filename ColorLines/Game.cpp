@@ -64,8 +64,21 @@ int game(void)
 	// Single structure for all graphicals resources
 	UnityGraph GraphicsRes;
 	std::vector<std::pair<int, string>> scoresTable;
-	std::string aboutstr = "\n Programer - Vlad Lapshuda (VAL)\\
-							\n Graphics - VAL";
+	std::string aboutstr = "\n             COLOR LINES \
+							\n\
+							\n\
+							\n              Made with\
+							\n              SFML-3.2.3\
+							\n\
+							\n\
+							\n Programer - Vlad Lapshuda (VAL)\
+							\n Graphics - VAL\
+							\n Link: github.com/VALINT/ColorLines\
+							\n\
+							\n\
+							\n\
+							\n\
+							\n             2017 - 2021";
 
 	MainMenu	menu(&GraphicsRes, &window, nullptr);
 	Highscore	hscore(&GraphicsRes, &window, &font);
@@ -184,7 +197,8 @@ int game(void)
 	Label  gmovrnamelb		("Your name:  ",	&font, sf::Vector2f(250, 50), sf::Vector2f(200, 340), 32, BG_COLOR, TEXT_COLOR, false, false);
 	Label  gmovrscore		("",				&font, sf::Vector2f(250, 50), sf::Vector2f(480, 220), 32, BG_COLOR, TEXT_COLOR, false, false);
 	Label  gmovrplace		("",				&font, sf::Vector2f(250, 50), sf::Vector2f(480, 280), 32, BG_COLOR, TEXT_COLOR, false, false);
-	Label  aboutgame		(aboutstr,			&font, sf::Vector2f(500, 500),sf::Vector2f(230, 50),  24, BG_COLOR, TEXT_COLOR, false, false);
+	Label  aboutgame		(aboutstr,			&font, sf::Vector2f(500, 500),sf::Vector2f(230, 50),  24, BG_SEMI_COLOR, TEXT_COLOR, false, false);
+	Label  aboutlbl			("ABOUT",			&font, sf::Vector2f(500, 50), sf::Vector2f(230, 5),   40, BG_COLOR, TEXT_COLOR, false, true);
 	TextBox gmovrname		(					&font, sf::Vector2f(275, 50), sf::Vector2f(480, 340), 32, BG_COLOR, TEXT_COLOR);
 	Button gmovr_newgame	("New Game",		&font, sf::Vector2f(275, 50), sf::Vector2f(180, 450), 32, BG_COLOR, TEXT_COLOR, HOVER_COLOR, HOLD_COLOR, &addEvent, 400);
 	Button gmovr_back		("Exit",			&font, sf::Vector2f(275, 50), sf::Vector2f(505, 450), 32, BG_COLOR, TEXT_COLOR, HOVER_COLOR, HOLD_COLOR, &addEvent, 500);
@@ -412,8 +426,9 @@ int game(void)
 				fsm_st = MAIN_MENU_ST;
 			break;
 		case(ABOUT_ST):
+			window.draw(GraphicsRes.second["Menu_Background"]["Menu_Background"]);
 			aboutgame.draw(window);
-
+			aboutlbl.draw(window);
 			back_btn.traceMouse(mouseCoord);
 			back_btn.draw(window);
 
