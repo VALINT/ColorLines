@@ -64,6 +64,8 @@ int game(void)
 	// Single structure for all graphicals resources
 	UnityGraph GraphicsRes;
 	std::vector<std::pair<int, string>> scoresTable;
+	std::string aboutstr = "\n Programer - Vlad Lapshuda (VAL)\\
+							\n Graphics - VAL";
 
 	MainMenu	menu(&GraphicsRes, &window, nullptr);
 	Highscore	hscore(&GraphicsRes, &window, &font);
@@ -182,6 +184,7 @@ int game(void)
 	Label  gmovrnamelb		("Your name:  ",	&font, sf::Vector2f(250, 50), sf::Vector2f(200, 340), 32, BG_COLOR, TEXT_COLOR, false, false);
 	Label  gmovrscore		("",				&font, sf::Vector2f(250, 50), sf::Vector2f(480, 220), 32, BG_COLOR, TEXT_COLOR, false, false);
 	Label  gmovrplace		("",				&font, sf::Vector2f(250, 50), sf::Vector2f(480, 280), 32, BG_COLOR, TEXT_COLOR, false, false);
+	Label  aboutgame		(aboutstr,			&font, sf::Vector2f(500, 500),sf::Vector2f(230, 50),  24, BG_COLOR, TEXT_COLOR, false, false);
 	TextBox gmovrname		(					&font, sf::Vector2f(275, 50), sf::Vector2f(480, 340), 32, BG_COLOR, TEXT_COLOR);
 	Button gmovr_newgame	("New Game",		&font, sf::Vector2f(275, 50), sf::Vector2f(180, 450), 32, BG_COLOR, TEXT_COLOR, HOVER_COLOR, HOLD_COLOR, &addEvent, 400);
 	Button gmovr_back		("Exit",			&font, sf::Vector2f(275, 50), sf::Vector2f(505, 450), 32, BG_COLOR, TEXT_COLOR, HOVER_COLOR, HOLD_COLOR, &addEvent, 500);
@@ -192,12 +195,6 @@ int game(void)
 
 	srand(time(NULL));
 
-	//ifstream save("Save.txt");
-	//if (!highscore.is_open())
-	//{
-	//	ofstream save("Save.txt");
-	//	cout << "Save.txt is maked" << endl;
-	//}
 	Event event;
 	while (window.isOpen())
 	{
@@ -228,6 +225,9 @@ int game(void)
 
 		switch (fsm_st)
 		{
+		case (IDLE_ST):
+				fsm_st = MAIN_MENU_ST;
+			break;
 		case(MAIN_MENU_ST):
 			
 			menu.traceMouse(mouseCoord);
@@ -237,11 +237,11 @@ int game(void)
 				pair<int, int> ev = ejectEvent();
 				if (ev.NAME == NEW_GAME_BT && ev.second == 0)
 				{
-					fsm_st = GAME_ST;
 					game.InitGame();
+					fsm_st = GAME_ST;
 				}
 				else if (ev.NAME == CONTINUE_BT && ev.second == 0)
-					fsm_st = GAME_ST;
+					fsm_st = CONTINUE;
 				else if (ev.NAME == SETTINGS_BT && ev.second == 0)
 					fsm_st = SETTINGS_ST;
 				else if (ev.NAME == ABOUT_BT && ev.second == 0)
@@ -264,8 +264,10 @@ int game(void)
 			game.setTime(clock.getElapsedTime().asMicroseconds()/1000);
 			clock.restart();
 			
-			if (seekEvent({100, 0 }))
+			if (seekEvent({ 100, 0 }))
 				game.InitGame();
+			else if (seekEvent({ 200,0 }))
+				game.savegame("save.dat");
 			else if(seekEvent({ 300,0 }))
 				fsm_st = MAIN_MENU_ST;
 			game.processField();
@@ -296,6 +298,10 @@ int game(void)
 			}
 
 			game.draw();
+			break;
+		case(CONTINUE):
+			game.loadgame("save.dat");
+			fsm_st = GAME_ST;
 			break;
 		case(BALL_EMERGENCE_ST):
 			game.setTime(clock.getElapsedTime().asMicroseconds() / 1000);
@@ -406,9 +412,17 @@ int game(void)
 				fsm_st = MAIN_MENU_ST;
 			break;
 		case(ABOUT_ST):
-			hscore.draw();
+			aboutgame.draw(window);
+
+			back_btn.traceMouse(mouseCoord);
+			back_btn.draw(window);
+
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
 				fsm_st = MAIN_MENU_ST;
+
+			if (seekEvent({ 600,EV_BUTTON_CLICK }))
+				fsm_st = MAIN_MENU_ST;
+
 			break;
 
 		case(HIGHSCORES_ST):
@@ -525,6 +539,11 @@ bool BallPlace::isPlaing(void)
 int BallPlace::getColor(void)
 {
 	return ball.getColor();
+}
+
+void BallPlace::setColor(int color)
+{
+	this->ball.setColor(color);
 }
 
 
@@ -722,6 +741,71 @@ bool MyGame::moveball()
 	int y = ( 95 + 50 * (yc-1)) + (frame * (50*(yn - yc) / 5));
 	moveBall.draw(*outWindow, sf::Vector2f(x, y), colorTable[GameField[ballPath[0]].getColor()]);
 	return false;
+}
+
+void MyGame::loadgame(std::string name)
+{
+	if (GameField.size() > 0) return;
+
+	InitGame();
+	std::string str;
+
+	labels[1].setText(to_string(highscore));
+	labels[3].setText(to_string(score));
+
+	ifstream save(name);
+	if (!save.is_open())
+	{
+		ofstream save(name);
+		cout << name<<" was made" << endl;
+	}
+	else
+	{
+		ballsCounter = 0;
+		for (auto &i : GameField)
+		{
+			getline(save, str);
+			if (str != "")
+			{
+				if (atoi(str.c_str()) != 0)
+				{
+					i.setColor(atoi(str.c_str()));
+					i.setBall();
+					ballsCounter++;
+				}
+				else
+					i.removeBall();
+			}
+		}
+		nextBalls.clear();
+		for (int i = 0; i < 3; i++)
+		{
+			getline(save, str);
+			standartBall.setColor(atoi(str.c_str()));
+			nextBalls.push_back(standartBall);
+			nextBalls[i].set();
+		}
+	}
+	save.close();
+}
+
+void MyGame::savegame(std::string name)
+{
+	ofstream save(name);
+
+	for (auto i : GameField)
+	{
+		if (i.isBall())
+			save << i.getColor() << "\n";
+		else
+			save << "0" << "\n";
+	}
+	for (auto i : nextBalls)
+	{
+			save << i.getColor() << "\n";
+	}
+
+	save.close();
 }
 
 bool MyGame::checkWay(sf::Vector2i position)

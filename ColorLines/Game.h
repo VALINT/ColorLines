@@ -20,6 +20,7 @@ typedef enum {	IDLE_ST,
 				LOAD_RES_ST,
 				START_ANIMATION_ST,
 				MAIN_MENU_ST,
+				CONTINUE,
 				GAME_ST,
 				BALL_EMERGENCE_ST,
 				BALL_MOVE_ST,
@@ -72,6 +73,7 @@ public:
 	bool isBall(void);
 	bool isPlaing(void);
 	int getColor(void);
+	void setColor(int);
 	void draw(sf::RenderWindow &, float time = 0);
 private:
 	sf::Vector2i ballPosition = {0,0};
@@ -90,6 +92,8 @@ public:
 	void insertBalls(void);
 	void processField(void);
 	bool moveball(void);
+	void loadgame(std::string);
+	void savegame(std::string);
 	bool checkWay(sf::Vector2i position);
 	bool checkLine();
 	void clearBall();

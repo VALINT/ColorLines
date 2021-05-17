@@ -31,7 +31,7 @@ public:
     {
         if(!isPlaying) return;
         currentFrame += abs(speed) * time;
-        if((int)currentFrame >= frames.size())
+        if(currentFrame >= (float)frames.size())
         {
 			if((int)currentFrame - frames.size() > (frames.size()-1))
 				currentFrame = 0;
