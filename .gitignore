@@ -30,3 +30,25 @@
 *.exe
 *.out
 *.app
+
+# Photoshop files
+*.psd
+
+# Visual Studio files
+*.sln
+*.VC
+*.db
+*.vcxproj
+*.filters
+*.user
+
+# Directives
+Debug/
+Release/
+SFML-2.3.2/
+SFML-2.4.2/
+x64/
+ColorLines/Debug/
+ColorLines/Release/
+ColorLines/ps/
+ColorLines/x64/
