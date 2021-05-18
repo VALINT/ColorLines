@@ -37,6 +37,7 @@ enum {NEW_GAME_BT, CONTINUE_BT, SETTINGS_BT, HIGHSCORE_BT, ABOUT_BT, EXIT_BT} bu
 vector<pair<int, int>> EventList;
 
 bool seekEvent(pair<int, int>);
+bool seekEventType(int);
 pair<int, int> ejectEvent(void);
 void addEvent(pair<int, int> Gevent);
 void clearEventList();
@@ -63,6 +64,7 @@ int game(void)
 
 	// Single structure for all graphicals resources
 	UnityGraph GraphicsRes;
+	UnitySound SoundRes;
 	std::vector<std::pair<int, string>> scoresTable;
 	std::string aboutstr = "\n             COLOR LINES \
 							\n\
@@ -104,6 +106,31 @@ int game(void)
 		}
 	}
 	TexturesList.close();
+
+	//Parse file with sound resources and create sounds array.
+	ifstream SoundList("Sound_list.dat", std::ifstream::binary);
+	if (!SoundList.is_open())
+	{
+		cout << "#ERROR: Sound_list.dat not founded!" << endl;
+	}
+	else
+	{
+		string str;
+		while (getline(SoundList, str))
+		{
+			sf::SoundBuffer* tempsb = new sf::SoundBuffer;
+			sf::Sound*		 temps  = new sf::Sound;
+			tempsb->loadFromFile(str);
+			temps->setBuffer(*tempsb);
+			string name = str.substr(str.find_last_of('/') + 1, (str.find_last_of('.') - str.find('/') - 1));
+			SoundRes[name] = { *tempsb, *temps };
+			SoundRes[name].second.setBuffer(SoundRes[name].first);
+			delete(tempsb);
+			delete(temps);
+		}
+	}
+	SoundList.close();
+
 
 	//Parse file with sprites data and create sprites array.
 	ifstream SpriteList("Sprites.dat", std::ifstream::binary);
@@ -208,6 +235,7 @@ int game(void)
 
 	gmovrname.setLimit(15);
 	game.initGraphics();
+	game.setSound(&SoundRes);
 
 	srand(time(NULL));
 
@@ -250,44 +278,54 @@ int game(void)
 			
 			menu.traceMouse(mouseCoord);
 			menu.draw();
-			while (getLenght())
+			//pair<int, int> ev = ejectEvent();
+			if (seekEvent({ NEW_GAME_BT, EV_BUTTON_CLICK }))
 			{
-				pair<int, int> ev = ejectEvent();
-				if (ev.NAME == NEW_GAME_BT && ev.second == 0)
-				{
-					game.InitGame();
-					fsm_st = GAME_ST;
-				}
-				else if (ev.NAME == CONTINUE_BT && ev.second == 0)
-					fsm_st = CONTINUE;
-				else if (ev.NAME == SETTINGS_BT && ev.second == 0)
-					fsm_st = SETTINGS_ST;
-				else if (ev.NAME == ABOUT_BT && ev.second == 0)
-					fsm_st = ABOUT_ST;
-				else if (ev.NAME == HIGHSCORE_BT && ev.second == 0 )
-					fsm_st = HIGHSCORES_ST;
-				else if (ev.NAME == EXIT_BT && ev.second == 0)
-				{
-					scoretable.close();
-					window.close();
-				}
-				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
-					fsm_st = MAIN_MENU_ST;
-
-
+				game.InitGame();
+				fsm_st = GAME_ST;
 			}
+			else if (seekEvent({ CONTINUE_BT, EV_BUTTON_CLICK }))
+				fsm_st = CONTINUE;
+			else if (seekEvent({ SETTINGS_BT, EV_BUTTON_CLICK }))
+				fsm_st = SETTINGS_ST;
+			else if (seekEvent({ ABOUT_BT, EV_BUTTON_CLICK }))
+				fsm_st = ABOUT_ST;
+			else if (seekEvent({ HIGHSCORE_BT, EV_BUTTON_CLICK }))
+				fsm_st = HIGHSCORES_ST;
+			else if (seekEvent({ EXIT_BT, EV_BUTTON_CLICK }))
+			{
+				scoretable.close();
+				window.close();
+			}
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
+				fsm_st = MAIN_MENU_ST;
 			break;
 		case(GAME_ST):
 			game.CheckMouse(mouseCoord);
 			game.setTime(clock.getElapsedTime().asMicroseconds()/1000);
 			clock.restart();
-			
+
+			if (seekEventType(EV_BUTTON_HOVER))
+			{
+				if (seekEvent({ 100, 1 }) || seekEvent({ 200, 1 }) || seekEvent({ 300, 1 }))
+					SoundRes["button_hover"].second.play();
+			}
 			if (seekEvent({ 100, 0 }))
+			{
 				game.InitGame();
+				SoundRes["button_click"].second.play();
+			}
 			else if (seekEvent({ 200,0 }))
+			{
 				game.savegame("save.dat");
-			else if(seekEvent({ 300,0 }))
+				SoundRes["button_click"].second.play();
+			}
+			else if (seekEvent({ 300,0 }))
+			{
 				fsm_st = MAIN_MENU_ST;
+				SoundRes["button_click"].second.play();
+			}
+
 			game.processField();
 			
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
@@ -362,6 +400,7 @@ int game(void)
 				}
 				if (seekEvent({ 1000,EV_GAME_OVER }))
 				{
+					SoundRes["game_over"].second.play();
 					fsm_st = GAME_OVER_ST;
 				}
 					
@@ -470,6 +509,10 @@ int game(void)
 		break;
 		}
 
+		if (seekEventType(EV_BUTTON_CLICK))
+			SoundRes["button_click"].second.play();
+		if (seekEventType(EV_BUTTON_HOVER))
+			SoundRes["button_hover"].second.play();
 		
 		clearEventList();
 		window.display();
@@ -482,6 +525,16 @@ bool seekEvent(pair<int, int> ev)
 	for (auto i : EventList)
 	{
 		if (i.first == ev.first && i.second == ev.second)
+			return true;
+	}
+	return false;
+}
+
+bool seekEventType(int ev)
+{
+	for (auto i : EventList)
+	{
+		if (i.second == ev)
 			return true;
 	}
 	return false;
@@ -649,9 +702,9 @@ void MyGame::initGraphics()
 	standartBall.createAnimation("Hover",			graphics->TEXTURES["Balls_Bounce_2"], 300, 0, 50, 50, 3, 0.008, 50, false);
 	standartBall.createAnimation("Stay",			graphics->TEXTURES["Balls_Bounce_2"], 0, 0, 50, 50, 1, 0.0025, 50, false);
 
-	soundbuff.loadFromFile("Sounds/ball_bounce_2.wav");
-	sound.setBuffer(soundbuff);
-	sound.setVolume(50.f);
+	//soundbuff.loadFromFile("Sounds/ball_bounce_2.wav");
+	//sound.setBuffer(soundbuff);
+	//sound.setVolume(50.f);
 }
 
 void MyGame::CheckMouse(sf::Vector2f Coordinates)
@@ -730,13 +783,16 @@ void MyGame::processField(void)
 					{
 						for (auto &i : GameField)
 						{
-							if(i.getAnimation() != DISAPPEARANCE)
-							i.setAnimation("Stay");
+							if (i.getAnimation() != DISAPPEARANCE)
+								i.setAnimation("Stay");
 						}
-						GameField[tmp.first - 1].setAnimation("Bounce");
-						choosenBall = (GameField[tmp.first - 1].isBall()) ? sf::Vector2i((tmp.first - 1) % 9 + 1, (tmp.first - 1) / 9 + 1) : sf::Vector2i(0, 0);
+						if (GameField[tmp.first - 1].getAnimation() != DISAPPEARANCE)
+						{
+							GameField[tmp.first - 1].setAnimation("Bounce");
+							choosenBall = (GameField[tmp.first - 1].isBall()) ? sf::Vector2i((tmp.first - 1) % 9 + 1, (tmp.first - 1) / 9 + 1) : sf::Vector2i(0, 0);
+							soundRes->at("ball_chosen").second.play();
+						}
 					}
-
 				}
 			}
 		}
@@ -781,8 +837,10 @@ bool MyGame::moveball()
 
 	if (moveBall.getFrame() == 5 && !soundTrigger)
 	{
-		sound.stop();
-		sound.play();
+		soundRes->at("ball_bounce_2").second.stop();
+		soundRes->at("ball_bounce_2").second.play();
+		//sound.stop();
+		//sound.play();
 		soundTrigger = true;
 	}
 	else if (moveBall.getFrame() == 0)
@@ -837,7 +895,10 @@ void MyGame::loadgame(std::string name)
 			nextBalls[i].set();
 		}
 	}
+	getline(save, str);
+	score = atoi(str.c_str());
 	save.close();
+	labels[3].setText(str);
 }
 
 void MyGame::savegame(std::string name)
@@ -855,7 +916,7 @@ void MyGame::savegame(std::string name)
 	{
 			save << i.getColor() << "\n";
 	}
-
+	save << score << "\n";
 	save.close();
 }
 
@@ -1142,7 +1203,7 @@ void MyGame::deleteLine()
 	}
 	//std::cout << "score - " << score << std::endl;
 	
-
+	soundRes->at("ball_disappearing").second.play();
 }
 
 void MyGame::createNew(void)
@@ -1154,6 +1215,11 @@ void MyGame::createNew(void)
 		nextBalls.push_back(standartBall);
 		nextBalls[i].set();
 	}
+}
+
+void MyGame::setSound(UnitySound *sound)
+{
+	this->soundRes = sound;
 }
 
 void MyGame::draw()
@@ -1168,7 +1234,7 @@ void MyGame::draw()
 		i.draw(*outWindow, time);
 		if (i.getAnimation() == "Bounce" && i.getFrame() == 5 && !soundTrigger)
 		{
-			sound.play();
+			soundRes->at("ball_bounce_2").second.play();
 			soundTrigger = true;
 		}
 		else if(i.getAnimation() == "Bounce" && i.getFrame() == 0)

@@ -1,8 +1,7 @@
 #ifndef _GAME_H_
 #define _GAME_H_
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
+
 #include <streambuf>
 #include <iostream>
 #include <stdlib.h>
@@ -34,7 +33,6 @@ typedef enum {	IDLE_ST,
 				EXIT_ST
 } FSM_STATE;
 
-typedef std::pair< std::map< std::string, sf::Texture >, std::map< std::string, std::map< std::string, sf::Sprite > > > UnityGraph;
 
 int game(void);
 
@@ -115,6 +113,7 @@ public:
 	bool checkDisappearance();
 	void deleteLine(void);
 	void createNew(void);
+	void setSound(UnitySound*);
 	void draw();
 	std::string					scoreStr;
 	std::string					highscoreStr;
@@ -136,6 +135,7 @@ private:
 	Ball						standartBall;
 	Ball						moveBall;
 	std::vector<Ball>			nextBalls;
+	UnitySound				    *soundRes;
 	sf::SoundBuffer				soundbuff;
 	sf::Sound					sound;
 	UnityGraph					*graphics;
