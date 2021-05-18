@@ -2,6 +2,7 @@
 #define _GAME_H_
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <streambuf>
 #include <iostream>
 #include <stdlib.h>
@@ -71,8 +72,9 @@ public:
 	void setAnimation(std::string);
 	std::string getAnimation(void);
 	bool isBall(void);
+	int  getFrame(void);
 	bool isPlaing(void);
-	int getColor(void);
+	int  getColor(void);
 	void setColor(int);
 	void draw(sf::RenderWindow &, float time = 0);
 private:
@@ -134,12 +136,15 @@ private:
 	Ball						standartBall;
 	Ball						moveBall;
 	std::vector<Ball>			nextBalls;
+	sf::SoundBuffer				soundbuff;
+	sf::Sound					sound;
 	UnityGraph					*graphics;
 	sf::RenderWindow			*outWindow;
 	sf::View					*View;
 	bool						transition = false;
 	bool						startJump;
 	bool						endJump = false;
+	bool						soundTrigger = false;
 };
 
 #endif

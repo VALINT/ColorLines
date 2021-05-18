@@ -45,11 +45,12 @@ void Highscore::biuldTable(void)
 
 void Highscore::draw()
 {
-	outWindow->draw(graphics->second["Menu_Background"]["Menu_Background"]);
+	//outWindow->draw(graphics->second["Menu_Background"]["Menu_Background"]);
 	bg.draw(*outWindow);
-	lbl.draw(*outWindow);
+
 	for (auto &i : labels)
 	{
 		i.draw(*outWindow);
 	}
+	lbl.draw(*outWindow);
 }

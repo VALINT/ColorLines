@@ -190,7 +190,8 @@ int game(void)
 	game.addLabel(Label ("Score", &font, sf::Vector2f(100, 35), sf::Vector2f(820, 300), 25, BG_COLOR, TEXT_COLOR, false, true));
 	game.addLabel(Label (" ", &font, sf::Vector2f(100, 35), sf::Vector2f(820, 335), 25, BG_COLOR, TEXT_COLOR, false, true));
 
-	Background gmovr_shading(sf::Vector2f(960, 600), sf::Vector2f(0, 0),sf::Color(0x25, 0x25, 0x25, 0x80), false);
+	Background gmovr_shading (sf::Vector2f(960, 600), sf::Vector2f(0, 0),sf::Color(0x25, 0x25, 0x25, 0x80), false);
+	Background settings_bg   (sf::Vector2f(500, 500), sf::Vector2f(230, 50), BG_SEMI_COLOR, false);
 	Label  gmovrlable		("GAME OVER",		&font, sf::Vector2f(600, 300), sf::Vector2f(180, 100), 72, BG_COLOR, TEXT_COLOR, false, true);
 	Label  gmovrscorelb		("Your result: ",	&font, sf::Vector2f(250, 50), sf::Vector2f(200, 220), 32, BG_COLOR, TEXT_COLOR, false, false);
 	Label  gmovrplacelb		("Your place:  ",	&font, sf::Vector2f(250, 50), sf::Vector2f(200, 280), 32, BG_COLOR, TEXT_COLOR, false, false);
@@ -199,6 +200,7 @@ int game(void)
 	Label  gmovrplace		("",				&font, sf::Vector2f(250, 50), sf::Vector2f(480, 280), 32, BG_COLOR, TEXT_COLOR, false, false);
 	Label  aboutgame		(aboutstr,			&font, sf::Vector2f(500, 500),sf::Vector2f(230, 50),  24, BG_SEMI_COLOR, TEXT_COLOR, false, false);
 	Label  aboutlbl			("ABOUT",			&font, sf::Vector2f(500, 50), sf::Vector2f(230, 5),   40, BG_COLOR, TEXT_COLOR, false, true);
+	Label  settingslbl		("SETTINGS",		&font, sf::Vector2f(500, 50), sf::Vector2f(230, 5),   40, BG_COLOR, TEXT_COLOR, false, true);
 	TextBox gmovrname		(					&font, sf::Vector2f(275, 50), sf::Vector2f(480, 340), 32, BG_COLOR, TEXT_COLOR);
 	Button gmovr_newgame	("New Game",		&font, sf::Vector2f(275, 50), sf::Vector2f(180, 450), 32, BG_COLOR, TEXT_COLOR, HOVER_COLOR, HOLD_COLOR, &addEvent, 400);
 	Button gmovr_back		("Exit",			&font, sf::Vector2f(275, 50), sf::Vector2f(505, 450), 32, BG_COLOR, TEXT_COLOR, HOVER_COLOR, HOLD_COLOR, &addEvent, 500);
@@ -228,13 +230,15 @@ int game(void)
 		}
 		
 		window.clear(Color::Black);
-		//window.setView(view);
-
-		sf::Vector2f mouseCoord = sf::Vector2f(sf::Mouse::getPosition(window));
 		sf::Vector2u screenSize = window.getSize();
+		if (screenSize.x != w || screenSize.y != h)
+		{
+			window.setSize(sf::Vector2u(w, h));
+		}
+		sf::Vector2f mouseCoord = sf::Vector2f(sf::Mouse::getPosition(window));
 
-		mouseCoord.x = mouseCoord.x / (screenSize.x / nw);
-		mouseCoord.y = mouseCoord.y / (screenSize.y / nh);
+		mouseCoord.x = mouseCoord.x / (screenSize.x / w);
+		mouseCoord.y = mouseCoord.y / (screenSize.y / h);
 
 
 		switch (fsm_st)
@@ -421,12 +425,20 @@ int game(void)
 
 			break;
 		case(SETTINGS_ST):
-			hscore.draw();
+			window.draw(GraphicsRes.second["Menu_Background"]["Menu_Background"]);
+			gmovr_shading.draw(window);
+			settings_bg.draw(window);
+			settingslbl.draw(window);
+			back_btn.traceMouse(mouseCoord);
+			back_btn.draw(window);
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
+				fsm_st = MAIN_MENU_ST;
+			if (seekEvent({ 600,EV_BUTTON_CLICK }))
 				fsm_st = MAIN_MENU_ST;
 			break;
 		case(ABOUT_ST):
 			window.draw(GraphicsRes.second["Menu_Background"]["Menu_Background"]);
+			gmovr_shading.draw(window);
 			aboutgame.draw(window);
 			aboutlbl.draw(window);
 			back_btn.traceMouse(mouseCoord);
@@ -441,6 +453,8 @@ int game(void)
 			break;
 
 		case(HIGHSCORES_ST):
+			window.draw(GraphicsRes.second["Menu_Background"]["Menu_Background"]);
+			gmovr_shading.draw(window);
 			hscore.draw();
 			back_btn.traceMouse(mouseCoord);
 			back_btn.draw(window);
@@ -546,6 +560,11 @@ bool BallPlace::isBall(void)
 	return ball.get();
 }
 
+int BallPlace::getFrame(void)
+{
+	return ball.getFrame();
+}
+
 bool BallPlace::isPlaing(void)
 {
 	return ball.isPlaing();
@@ -629,6 +648,10 @@ void MyGame::initGraphics()
 	standartBall.createAnimation("Disappearance",	graphics->TEXTURES["Balls_Bounce_2"], 250, 50, 50, 50, 5, 0.015, 50, false);
 	standartBall.createAnimation("Hover",			graphics->TEXTURES["Balls_Bounce_2"], 300, 0, 50, 50, 3, 0.008, 50, false);
 	standartBall.createAnimation("Stay",			graphics->TEXTURES["Balls_Bounce_2"], 0, 0, 50, 50, 1, 0.0025, 50, false);
+
+	soundbuff.loadFromFile("Sounds/ball_bounce_2.wav");
+	sound.setBuffer(soundbuff);
+	sound.setVolume(50.f);
 }
 
 void MyGame::CheckMouse(sf::Vector2f Coordinates)
@@ -755,6 +778,19 @@ bool MyGame::moveball()
 	int x = (252 + 50 * (xc-1)) + (frame * (50*(xn - xc) / 5));
 	int y = ( 95 + 50 * (yc-1)) + (frame * (50*(yn - yc) / 5));
 	moveBall.draw(*outWindow, sf::Vector2f(x, y), colorTable[GameField[ballPath[0]].getColor()]);
+
+	if (moveBall.getFrame() == 5 && !soundTrigger)
+	{
+		sound.stop();
+		sound.play();
+		soundTrigger = true;
+	}
+	else if (moveBall.getFrame() == 0)
+	{
+		soundTrigger = false;
+	}
+
+
 	return false;
 }
 
@@ -1126,8 +1162,19 @@ void MyGame::draw()
 	for (auto &i : GameField)
 		if (i.getAnimation() == "Hover" && !i.isPlaing() && !i.isHover())
 			i.setAnimation("Stay");
+
 	for (auto &i : GameField)
+	{
 		i.draw(*outWindow, time);
+		if (i.getAnimation() == "Bounce" && i.getFrame() == 5 && !soundTrigger)
+		{
+			sound.play();
+			soundTrigger = true;
+		}
+		else if(i.getAnimation() == "Bounce" && i.getFrame() == 0)
+			soundTrigger = false;
+	}
+		
 
 	for (auto &i : buttons)
 		i.draw(*outWindow);
