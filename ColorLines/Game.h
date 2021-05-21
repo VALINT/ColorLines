@@ -1,8 +1,9 @@
 #ifndef _GAME_H_
 #define _GAME_H_
 
-
+#include <algorithm>
 #include <streambuf>
+#include <iterator>
 #include <iostream>
 #include <stdlib.h>
 #include <fstream>
@@ -10,6 +11,7 @@
 #include <time.h>
 #include <string>
 #include <map>
+#include <set>
 #include "MainMeny.h"
 #include "Highscore.h"
 #include "Animation.hpp"
@@ -126,7 +128,7 @@ private:
 	void (*callback) (std::pair<int, int>);
 	std::vector<int>			ballPath;
 	std::vector<int>			emBalls;
-	std::vector<int>			deLine;
+	std::set<int>				deLine;
 	std::vector<Button>			buttons;
 	std::vector<Label>			labels;
 	std::vector<BallPlace>		GameField;

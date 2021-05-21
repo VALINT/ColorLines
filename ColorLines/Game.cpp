@@ -45,7 +45,7 @@ int getLenght(void);
 
 int game(void)
 {
-	FSM_STATE fsm_st = MAIN_MENU_ST;
+	FSM_STATE fsm_st = IDLE_ST;
 
 	setlocale(LC_ALL, "Ukr");
 	float w = 960, h = 600;
@@ -68,19 +68,18 @@ int game(void)
 	std::vector<std::pair<int, string>> scoresTable;
 	std::string aboutstr = "\n             COLOR LINES \
 							\n\
+							\n           Version - 1.0.0\
 							\n\
 							\n              Made with\
 							\n              SFML-3.2.3\
 							\n\
 							\n\
-							\n Programer - Vlad Lapshuda (VAL)\
+							\n Programer - VAL\
 							\n Graphics - VAL\
 							\n Link: github.com/VALINT/ColorLines\
 							\n\
 							\n\
-							\n\
-							\n\
-							\n             2017 - 2021";
+							\n                2021";
 
 	MainMenu	menu(&GraphicsRes, &window, nullptr);
 	Highscore	hscore(&GraphicsRes, &window, &font);
@@ -193,11 +192,6 @@ int game(void)
 		inscoretable.close();
 	}
 	hscore.biuldTable();
-	ofstream scoretable("ScoreTable.dat");
-	for (auto i : scoresTable)
-	{
-		scoretable << i.first << "," << i.second << "\n";
-	}
 
 	GraphicsRes.SPRITES["Menu_frame"]["Menu_frame"].setPosition(298, 44);
 
@@ -244,8 +238,26 @@ int game(void)
 	game.initGraphics();
 	game.setSound(&SoundRes);
 
-	srand(time(NULL));
+	//Parse file with graphical sources and create textures array.
+	ifstream Settings("Settings.dat", std::ifstream::binary);
+	if (!Settings.is_open())
+	{
+		cout << "#ERROR: Settings.dat not founded!" << endl;
+	}
+	else
+	{
+		string str;
+		while (getline(Settings, str))
+		{
+			loud.setValue(atoi(str.c_str()));
+			for (auto &i : SoundRes)
+				i.second.second.setVolume((float)atoi(str.c_str()));
+		}
+	}
+	Settings.close();
 
+	srand(time(NULL));
+	float name_y = -900, name_dy = 0, timetoend = 5;
 	Event event;
 	while (window.isOpen())
 	{
@@ -254,7 +266,7 @@ int game(void)
 		{
 			if (event.type == Event::Closed)
 			{
-				scoretable.close();
+				//scoretable.close();
 				window.close();
 			}
 				
@@ -274,12 +286,46 @@ int game(void)
 
 		mouseCoord.x = mouseCoord.x / (screenSize.x / w);
 		mouseCoord.y = mouseCoord.y / (screenSize.y / h);
-
-
+		float s = ((float)clock.getElapsedTime().asMicroseconds() / 1000);
 		switch (fsm_st)
 		{
 		case (IDLE_ST):
+			fsm_st = LOAD_RES_ST;
+			break;
+		case (LOAD_RES_ST):
+			SoundRes["falling"].second.play();
+			fsm_st = START_ANIMATION_ST;
+			break;
+		case (START_ANIMATION_ST):
+			name_dy = name_dy + s/1000;
+			name_y += name_dy;
+			if (name_y > 350)
+				{
+					name_y = 350; 
+					name_dy = -(name_dy / 2);
+					if (abs(name_dy) > 0.05)
+					{
+						SoundRes["splash"].second.play();
+					}
+					else
+					{
+						timetoend -= s/100;
+						if (timetoend < 0) 
+							timetoend = 0;
+						std::cout << "time - " << timetoend << std::endl;
+					}
+				}
+			window.draw(GraphicsRes.second["Menu_Background"]["Menu_Background"]);
+			GraphicsRes.SPRITES["Name"]["Name"].setPosition(sf::Vector2f(255, name_y));
+			window.draw(GraphicsRes.SPRITES["Name"]["Name"]);
+			clock.restart();
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || timetoend == 0)
+			{
 				fsm_st = MAIN_MENU_ST;
+				SoundRes["falling"].second.stop();
+				SoundRes["splash"].second.stop();
+			}
+
 			break;
 		case(MAIN_MENU_ST):
 			
@@ -301,7 +347,7 @@ int game(void)
 				fsm_st = HIGHSCORES_ST;
 			else if (seekEvent({ EXIT_BT, EV_BUTTON_CLICK }))
 			{
-				scoretable.close();
+				//scoretable.close();
 				window.close();
 			}
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
@@ -453,7 +499,13 @@ int game(void)
 				hscore.setScoreLine({ game.getScore(), pname });
 				hscore.biuldTable();
 				scoresTable.push_back({ game.getScore(), pname });
+				ofstream scoretable("ScoreTable.dat");
+				for (auto i : scoresTable)
+				{
+					scoretable << i.first << "," << i.second << "\n";
+				}
 				scoretable << game.getScore() << "," << pname << "\n";
+				scoretable.close();
 				game.InitGame();
 				fsm_st = GAME_ST;
 			}
@@ -464,7 +516,13 @@ int game(void)
 				hscore.setScoreLine({ game.getScore(), pname });
 				hscore.biuldTable();
 				scoresTable.push_back({ game.getScore(), pname });
+				ofstream scoretable("ScoreTable.dat");
+				for (auto i : scoresTable)
+				{
+					scoretable << i.first << "," << i.second << "\n";
+				}
 				scoretable << game.getScore() << "," << pname << "\n";
+				scoretable.close();
 				game.InitGame();
 				fsm_st = MAIN_MENU_ST;
 			}
@@ -488,6 +546,9 @@ int game(void)
 				fsm_st = MAIN_MENU_ST;
 			if (seekEvent({ 2000,10 }))
 			{
+				ofstream Settings("Settings.dat");
+				Settings << loud.getValue() << '\n';
+				Settings.close();
 				for (auto &i : SoundRes)
 					i.second.second.setVolume((float)loud.getValue());
 					
@@ -789,13 +850,13 @@ void MyGame::processField(void)
 					{
 						if (checkWay({ (tmp.first - 1) / 9 + 1, (tmp.first - 1) % 9 + 1 }) && !transition)
 						{
-						Ball tmpball;
-						tmpball = GameField[(choosenBall.x + 9 * (choosenBall.y - 1)) - 1].getBall();
-						GameField[(choosenBall.x + 9 * (choosenBall.y - 1)) - 1].removeBall();
-						GameField[tmp.first - 1].insertBall(tmpball);
-						GameField[tmp.first - 1].setAnimation("Stay");
-						callback({ 1000, EV_MOVE });
-						choosenBall = { 0,0 };
+							Ball tmpball;
+							tmpball = GameField[(choosenBall.x + 9 * (choosenBall.y - 1)) - 1].getBall();
+							GameField[(choosenBall.x + 9 * (choosenBall.y - 1)) - 1].removeBall();
+							GameField[tmp.first - 1].insertBall(tmpball);
+							GameField[tmp.first - 1].setAnimation("Stay");
+							callback({ 1000, EV_MOVE });
+							choosenBall = { 0,0 };
 						}
 					}
 					else
@@ -1017,12 +1078,13 @@ bool MyGame::checkLine()
 {
 	std::vector<int> vline, hline, dlline, drline;
 	int bx, by, color;
+	deLine.clear();
 	for (int i = 1; i <= 81; i++)
 	{
 		bx = (i - 1) % 9 + 1; 
 		by = (i - 1) / 9 + 1;
 
-		deLine.clear();
+		
 		vline.clear();
 		hline.clear();
 		dlline.clear();
@@ -1088,20 +1150,19 @@ bool MyGame::checkLine()
 			}
 
 			if (vline.size() >= 5)
-				std::copy(vline.begin(), vline.end(), std::back_inserter(deLine));
+				std::copy(vline.begin(), vline.end(), std::inserter(deLine, deLine.end()));
 			if (hline.size() >= 5)
-				std::copy(hline.begin(), hline.end(), std::back_inserter(deLine));
+				std::copy(hline.begin(), hline.end(), std::inserter(deLine, deLine.end()));
 			if (drline.size() >= 5)
-				std::copy(drline.begin(), drline.end(), std::back_inserter(deLine));
+				std::copy(drline.begin(), drline.end(), std::inserter(deLine, deLine.end()));
 			if (dlline.size() >= 5)
-				std::copy(dlline.begin(), dlline.end(), std::back_inserter(deLine));
+				std::copy(dlline.begin(), dlline.end(), std::inserter(deLine, deLine.end()));
 		}
-		if (deLine.size())
-		{
-			callback({1000,EV_LINE});
-			return true;
-		}
-
+	}
+	if (deLine.size())
+	{
+		callback({ 1000,EV_LINE });
+		return true;
 	}
 	return false;
 }
