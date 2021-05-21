@@ -255,7 +255,8 @@ int game(void)
 		}
 	}
 	Settings.close();
-
+	bool focus = true;
+	sf::Vector2f mouseCoord;
 	srand(time(NULL));
 	float name_y = -900, name_dy = 0, timetoend = 5;
 	Event event;
@@ -269,6 +270,8 @@ int game(void)
 				//scoretable.close();
 				window.close();
 			}
+			if (event.type == sf::Event::GainedFocus) focus = true;
+			if (event.type == sf::Event::LostFocus) focus = false;
 				
 			if (event.type == sf::Event::TextEntered)
 			{
@@ -282,7 +285,10 @@ int game(void)
 		{
 			window.setSize(sf::Vector2u(w, h));
 		}
-		sf::Vector2f mouseCoord = sf::Vector2f(sf::Mouse::getPosition(window));
+		if(focus)
+			mouseCoord = sf::Vector2f(sf::Mouse::getPosition(window));
+		else
+			mouseCoord = {0,0};
 
 		mouseCoord.x = mouseCoord.x / (screenSize.x / w);
 		mouseCoord.y = mouseCoord.y / (screenSize.y / h);
