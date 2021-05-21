@@ -766,3 +766,82 @@ int TabBar::getCurrentTab(void)
 {
 	return lastActive;
 }*/
+
+Slider::Slider(sf::Vector2f size,
+				sf::Vector2f pos,
+				sf::Color bg, 
+				sf::Color fl, 
+				sf::Color sl, 
+				void(*ev)(std::pair<int, int>), 
+				int id):bg(size, pos, bg, false)
+{
+	this->eventcallback = ev;
+	this->elementID = id;
+	sf::Image flimg, slimg;
+	flimg.create(int(size.x), int(size.y), fl);
+	filled.loadFromImage(flimg);
+	filledSp.setTexture(filled);
+	filledSp.setTextureRect(sf::IntRect({0,0}, sf::Vector2i(size)));
+	filledSp.setPosition(pos);
+
+	slimg.create(int(size.y), int(size.y), sl);
+	slider.loadFromImage(slimg);
+	sliderSp.setTexture(slider);
+	sliderSp.setTextureRect(sf::IntRect({ 0,0 }, sf::Vector2i(size.y, size.y)));
+	sliderSp.setPosition(pos);
+	buildBox();
+}
+
+void Slider::setValue(int value)
+{
+	this->value = value;
+	buildBox();
+}
+
+int Slider::getValue(void)
+{
+	return this->value;
+}
+
+void Slider::setCallback(void(*ev)(std::pair<int, int>))
+{
+	this->eventcallback = ev;
+}
+
+bool Slider::traceMouse(sf::Vector2f Coordinates)
+{
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+	{
+		if (bg.getRect().contains(Coordinates))
+		{
+			value = abs((float)(bg.getPosition().x - Coordinates.x)) / (((float)bg.getSize().x - slider.getSize().x) / 100);
+			if (value > 100) value = 100;
+			buildBox();
+			if (!click)
+				click = true;
+		}	
+	}
+	else if (click)
+	{
+		buildBox();
+		std::cout << "loud - " << value << std::endl;
+		click = false;
+		eventcallback(std::pair<int, int>(elementID, 10) );
+		return true;
+	}
+return false;
+}
+
+void Slider::draw(sf::RenderWindow & Window)
+{
+	bg.draw(Window);
+	Window.draw(filledSp);
+	Window.draw(sliderSp);
+}
+
+void Slider::buildBox()
+{
+	//sliderSp.setPosition( sliderSp.getPosition().x, ( ( (float)(bg.getSize().y - bg.getPosition().y)) / 100)*value );
+	sliderSp.setPosition(bg.getPosition().x + (((float)bg.getSize().x - slider.getSize().x) / 100)*value ,sliderSp.getPosition().y);
+	filledSp.setTextureRect(sf::IntRect(0, 0, (((float)bg.getSize().x - slider.getSize().x) / 100)*value ,bg.getSize().y));
+}

@@ -193,6 +193,33 @@ protected:
 	bool useIcon;
 };
 
+class Slider
+{
+public:
+	Slider(	sf::Vector2f,
+			sf::Vector2f,
+			sf::Color,
+			sf::Color,
+			sf::Color,
+			void(*ev)(std::pair<int, int>),
+			int = 0);
+	void setValue(int);
+	int  getValue(void);
+	void setCallback(void(*ev)(std::pair<int, int>));
+	bool traceMouse(sf::Vector2f);
+	void draw(sf::RenderWindow &Window);
+private:
+	void buildBox();
+	void(*eventcallback)(std::pair<int, int>);
+	Background bg;
+	sf::Texture filled;
+	sf::Texture slider;
+	sf::Sprite  filledSp;
+	sf::Sprite  sliderSp;
+	int			value = 100;;
+	int			elementID;
+	bool		click;
+};
 /*
 class Toggle : public Button
 {

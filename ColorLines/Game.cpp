@@ -217,6 +217,8 @@ int game(void)
 	game.addLabel(Label ("Score", &font, sf::Vector2f(100, 35), sf::Vector2f(820, 300), 25, BG_COLOR, TEXT_COLOR, false, true));
 	game.addLabel(Label (" ", &font, sf::Vector2f(100, 35), sf::Vector2f(820, 335), 25, BG_COLOR, TEXT_COLOR, false, true));
 
+	
+
 	Background gmovr_shading (sf::Vector2f(960, 600), sf::Vector2f(0, 0),sf::Color(0x25, 0x25, 0x25, 0x80), false);
 	Background settings_bg   (sf::Vector2f(500, 500), sf::Vector2f(230, 50), BG_SEMI_COLOR, false);
 	Label  gmovrlable		("GAME OVER",		&font, sf::Vector2f(600, 300), sf::Vector2f(180, 100), 72, BG_COLOR, TEXT_COLOR, false, true);
@@ -232,7 +234,12 @@ int game(void)
 	Button gmovr_newgame	("New Game",		&font, sf::Vector2f(275, 50), sf::Vector2f(180, 450), 32, BG_COLOR, TEXT_COLOR, HOVER_COLOR, HOLD_COLOR, &addEvent, 400);
 	Button gmovr_back		("Exit",			&font, sf::Vector2f(275, 50), sf::Vector2f(505, 450), 32, BG_COLOR, TEXT_COLOR, HOVER_COLOR, HOLD_COLOR, &addEvent, 500);
 	Button back_btn			("Back",			&font, sf::Vector2f(500, 50), sf::Vector2f(230, 500), 40, BG_COLOR, TEXT_COLOR, HOVER_COLOR, HOLD_COLOR, &addEvent, 600);
-
+	
+	Label  soundst("Sound", &font, sf::Vector2f(250, 50), sf::Vector2f(300, 60), 32, BG_COLOR, TEXT_COLOR, true, false);
+	Slider loud( sf::Vector2f(300, 40), sf::Vector2f(300, 110), BG3_COLOR, FILLED_COLOR, SLIDER_COLOR, &addEvent, 2000);
+	Label  soundld("", &font, sf::Vector2f(100, 50), sf::Vector2f(620, 110), 24, BG_COLOR, TEXT_COLOR, true, false);
+	loud.setValue(50);
+	
 	gmovrname.setLimit(15);
 	game.initGraphics();
 	game.setSound(&SoundRes);
@@ -470,10 +477,22 @@ int game(void)
 			settingslbl.draw(window);
 			back_btn.traceMouse(mouseCoord);
 			back_btn.draw(window);
+			soundst.draw(window);
+			loud.traceMouse(mouseCoord);
+			loud.draw(window);
+			soundld.setText(to_string(loud.getValue()));
+			soundld.draw(window);
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
 				fsm_st = MAIN_MENU_ST;
 			if (seekEvent({ 600,EV_BUTTON_CLICK }))
 				fsm_st = MAIN_MENU_ST;
+			if (seekEvent({ 2000,10 }))
+			{
+				for (auto &i : SoundRes)
+					i.second.second.setVolume((float)loud.getValue());
+					
+			}
+				//fsm_st = MAIN_MENU_ST;
 			break;
 		case(ABOUT_ST):
 			window.draw(GraphicsRes.second["Menu_Background"]["Menu_Background"]);
