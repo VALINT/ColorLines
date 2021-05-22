@@ -9,4 +9,4 @@ Game Screens:
 ![GameOver Screen](ReadmePics/GameOver_screen.png)
 ![Highscores Screen](ReadmePics/Highscore_screen.png)
 Demonstration: 
-![Demo](https://www.youtube.com/watch?v=YwzOwdK83aQ)
+[![Demo](https://i9.ytimg.com/vi/YwzOwdK83aQ/mq3.jpg?sqp=CMS2pIUG&rs=AOn4CLBGW680vNcniCs1dOJ7P_HkibR22w)](https://www.youtube.com/watch?v=YwzOwdK83aQ)]
