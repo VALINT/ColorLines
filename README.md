@@ -8,5 +8,6 @@ Game Screens:
 ![Game Screen](ReadmePics/Game_screen.png)
 ![GameOver Screen](ReadmePics/GameOver_screen.png)
 ![Highscores Screen](ReadmePics/Highscore_screen.png)
-Demonstration: 
-[![Demo](https://i9.ytimg.com/vi/YwzOwdK83aQ/mq3.jpg?sqp=CMS2pIUG&rs=AOn4CLBGW680vNcniCs1dOJ7P_HkibR22w)](https://www.youtube.com/watch?v=YwzOwdK83aQ)]
+Demonstration:
+
+[![Demo](https://i9.ytimg.com/vi/YwzOwdK83aQ/mq3.jpg?sqp=CMSOqYUG&rs=AOn4CLDamtARt8c1g4LSQFyMmeAVnhVAmA)](https://www.youtube.com/watch?v=YwzOwdK83aQ)
